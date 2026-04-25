@@ -75,7 +75,7 @@ def main():
     old = load_old()
 
     diff = [i for i in new if i not in old]
-
+    notify(new)  # ←ここ追加（強制通知）
     if diff:
         notify(diff)
 
