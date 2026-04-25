@@ -53,7 +53,6 @@ def notify(new_items):
     message = f"🆕 新着商品（{len(new_items)}件）\n\n"
 
     for i, item in enumerate(new_items[:5], 1):
-        # "商品名 | URL" を分割
         try:
             name, link = item.split(" | ")
         except:
@@ -65,10 +64,13 @@ def notify(new_items):
             message += f"🔗 {link}\n"
         message += "\n"
 
-    requests.post(
+    res = requests.post(
         WEBHOOK_URL,
         json={"content": message}
     )
+
+    print("通知ステータス:", res.status_code)
+    print("レスポンス:", res.text)
 
 def main():
     new = get_items()
