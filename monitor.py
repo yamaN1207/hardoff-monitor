@@ -4,47 +4,45 @@ import json
 import os
 
 URL = "https://netmall.hardoff.co.jp/cate/00010012/"
-HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "ja-JP,ja;q=0.9",
+    "Referer": "https://www.google.com/",
+}
 
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
+
 def get_items():
-    res = requests.get(URL, headers=HEADERS)
+    session = requests.Session()
+
+    # ① 先にトップページにアクセス（重要）
+    session.get("https://netmall.hardoff.co.jp/", headers=HEADERS)
+
+    # ② 本命ページ
+    res = session.get(URL, headers=HEADERS)
 
     print("ステータス:", res.status_code)
     print("HTML長さ:", len(res.text))
 
     soup = BeautifulSoup(res.text, "html.parser")
 
-    links = soup.find_all("a")
-    print("aタグ数:", len(links))
-
     items = []
 
-    for a in links[:50]:  # 最初の50個だけ確認
-        print(a.get_text(strip=True), a.get("href"))
+    for a in soup.select('a[href*="/product/"]'):
+        name = a.get_text(strip=True)
+        link = a.get("href")
 
-    return []
-#def get_items():
-#    res = requests.get(URL, headers=HEADERS)
-#    soup = BeautifulSoup(res.text, "html.parser")
+        if name and len(name) > 5:
+            if not link.startswith("http"):
+                link = "https://netmall.hardoff.co.jp" + link
 
-#    items = []
+            items.append(f"{name} | {link}")
 
-    # 商品リンクを抽出（これが一番安定）
- #   for a in soup.select('a[href*="/product/"]'):
- #       name = a.get_text(strip=True)
- #       link = a.get("href")
+    print("取得件数:", len(items))
 
-        # 不要な短文除外
- #       if name and len(name) > 5:
- #           if not link.startswith("http"):
-#                link = "https://netmall.hardoff.co.jp" + link
-
-  #          items.append(f"{name} | {link}")
-
-    # 重複削除
-   # return list(set(items))
+    return list(set(items))
 
 
 def load_old():
