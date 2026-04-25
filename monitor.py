@@ -50,13 +50,25 @@ def save(items):
 def notify(new_items):
     import requests
 
-    message = "🆕 新着商品！\n\n" + "\n".join(new_items[:5])
+    message = f"🆕 新着商品（{len(new_items)}件）\n\n"
+
+    for i, item in enumerate(new_items[:5], 1):
+        # "商品名 | URL" を分割
+        try:
+            name, link = item.split(" | ")
+        except:
+            name = item
+            link = ""
+
+        message += f"{i:02d}. {name}\n"
+        if link:
+            message += f"🔗 {link}\n"
+        message += "\n"
 
     requests.post(
         WEBHOOK_URL,
         json={"content": message}
     )
-
 
 def main():
     new = get_items()
