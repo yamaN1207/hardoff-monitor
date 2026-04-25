@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: コード取得
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Pythonセットアップ
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
       - name: ライブラリインストール
-        run: pip install requests beautifulsoup4
+        run: |
+          pip install playwright
+          playwright install chromium
 
       - name: 実行
         run: python monitor.py
