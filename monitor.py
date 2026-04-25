@@ -1,47 +1,37 @@
-import requests
-from bs4 import BeautifulSoup
 import json
 import os
+from playwright.sync_api import sync_playwright
 
 URL = "https://netmall.hardoff.co.jp/cate/00010012/"
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-    "Accept-Language": "ja-JP,ja;q=0.9",
-    "Referer": "https://www.google.com/",
-}
-
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 
 def get_items():
-    session = requests.Session()
-
-    # ① 先にトップページにアクセス（重要）
-    session.get("https://netmall.hardoff.co.jp/", headers=HEADERS)
-
-    # ② 本命ページ
-    res = session.get(URL, headers=HEADERS)
-
-    print("ステータス:", res.status_code)
-    print("HTML長さ:", len(res.text))
-
-    soup = BeautifulSoup(res.text, "html.parser")
-
     items = []
 
-    for a in soup.select('a[href*="/product/"]'):
-        name = a.get_text(strip=True)
-        link = a.get("href")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-        if name and len(name) > 5:
-            if not link.startswith("http"):
-                link = "https://netmall.hardoff.co.jp" + link
+        # ページ読み込み
+        page.goto(URL, wait_until="networkidle")
 
-            items.append(f"{name} | {link}")
+        # 商品リンク取得
+        links = page.query_selector_all('a[href*="/product/"]')
+
+        for a in links:
+            name = a.inner_text().strip()
+            link = a.get_attribute("href")
+
+            if name and len(name) > 5:
+                if not link.startswith("http"):
+                    link = "https://netmall.hardoff.co.jp" + link
+
+                items.append(f"{name} | {link}")
+
+        browser.close()
 
     print("取得件数:", len(items))
-
     return list(set(items))
 
 
@@ -58,6 +48,8 @@ def save(items):
 
 
 def notify(new_items):
+    import requests
+
     message = "🆕 新着商品！\n\n" + "\n".join(new_items[:5])
 
     requests.post(
