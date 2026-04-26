@@ -72,6 +72,13 @@ def notify(new_items):
 
 
 def main():
+    def main():
+    import datetime
+
+    now = datetime.datetime.utcnow()
+    print(f"UTC: {now}")
+    print(f"JST: {now + datetime.timedelta(hours=9)}")
+    
     new = get_items()
     old = load_old()
 
