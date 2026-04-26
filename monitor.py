@@ -72,7 +72,6 @@ def notify(new_items):
 
 
 def main():
-    def main():
     import datetime
 
     now = datetime.datetime.utcnow()
